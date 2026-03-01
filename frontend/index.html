@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo API</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+    h1 { color: #0f3460; margin-top: 0; }
+    h1 span { color: #e94560; }
+    section {
+      background: #16213e;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+    }
+    section h2 { margin: 0 0 0.75rem; font-size: 1rem; color: #0f3460; }
+    button, input {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      border: 1px solid #0f3460;
+      font-size: 1rem;
+    }
+    button {
+      background: #e94560;
+      color: #fff;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover { background: #c73e54; }
+    input { background: #1a1a2e; color: #eee; width: 5rem; }
+    .result {
+      margin-top: 0.75rem;
+      padding: 0.75rem;
+      background: #1a1a2e;
+      border-radius: 6px;
+      font-family: ui-monospace, monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .result.empty { color: #666; }
+    .result.err { color: #e94560; }
+    .row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <h1>Demo <span>API</span></h1>
+  <p>Проверка работы бэкенда: healthcheck, info, calc.</p>
+
+  <section>
+    <h2>Healthcheck</h2>
+    <button type="button" id="btn-health">Проверить</button>
+    <div id="out-health" class="result empty">—</div>
+  </section>
+
+  <section>
+    <h2>Системная информация</h2>
+    <button type="button" id="btn-info">Загрузить</button>
+    <div id="out-info" class="result empty">—</div>
+  </section>
+
+  <section>
+    <h2>Калькулятор (a + b)</h2>
+    <div class="row">
+      <input type="number" id="calc-a" value="2" step="any" aria-label="a">
+      <span>+</span>
+      <input type="number" id="calc-b" value="3" step="any" aria-label="b">
+      <button type="button" id="btn-calc">Сложить</button>
+    </div>
+    <div id="out-calc" class="result empty">—</div>
+  </section>
+
+  <script>
+    var API = '/api/v1';
+
+    function out(id, text, isErr) {
+      var el = document.getElementById(id);
+      el.textContent = text || '—';
+      el.classList.toggle('empty', !text);
+      el.classList.toggle('err', !!isErr);
+    }
+
+    function req(path) {
+      return fetch(API + path).then(function (r) {
+        if (!r.ok) throw new Error(r.status + ' ' + r.statusText);
+        return r.json();
+      });
+    }
+
+    document.getElementById('btn-health').onclick = function () {
+      out('out-health', '…');
+      req('/healthcheck')
+        .then(function (d) {
+          out('out-health', JSON.stringify(d, null, 2));
+        })
+        .catch(function (e) {
+          out('out-health', 'Ошибка: ' + e.message, true);
+        });
+    };
+
+    document.getElementById('btn-info').onclick = function () {
+      out('out-info', '…');
+      req('/info')
+        .then(function (d) {
+          out('out-info', JSON.stringify(d, null, 2));
+        })
+        .catch(function (e) {
+          out('out-info', 'Ошибка: ' + e.message, true);
+        });
+    };
+
+    document.getElementById('btn-calc').onclick = function () {
+      var a = document.getElementById('calc-a').value;
+      var b = document.getElementById('calc-b').value;
+      out('out-calc', '…');
+      req('/calc/' + encodeURIComponent(a) + '/' + encodeURIComponent(b))
+        .then(function (d) {
+          out('out-calc', JSON.stringify(d, null, 2));
+        })
+        .catch(function (e) {
+          out('out-calc', 'Ошибка: ' + e.message, true);
+        });
+    };
+  </script>
+</body>
+</html>
