@@ -48,6 +48,7 @@ make down
 | GET | `/api/v1/info` | Информация о системе (Python, платформа) |
 | GET | `/api/v1/healthcheck` | Проверка доступности |
 | GET | `/api/v1/calc/{a}/{b}` | Сложение двух чисел |
+| GET | `/api/v1/subtract/{a}/{b}` | Вычитание (a − b) |
 
 ## Makefile
 

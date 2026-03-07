@@ -1,6 +1,6 @@
 """
 Simple FastAPI app with /api/v1 routes: Swagger, info, healthcheck, calc,
-datetime.
+subtract, datetime.
 """
 import platform
 import sys
@@ -50,6 +50,12 @@ def datetime_now() -> dict[str, str]:
 def calc(a: float, b: float) -> dict[str, float]:
     """Add two numbers a and b."""
     return {"result": a + b}
+
+
+@router.get("/subtract/{a}/{b}")
+def subtract(a: float, b: float) -> dict[str, float]:
+    """Subtract b from a."""
+    return {"result": a - b}
 
 
 app.include_router(router)

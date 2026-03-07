@@ -55,7 +55,7 @@
 </head>
 <body>
   <h1>Demo <span>API</span></h1>
-  <p>Проверка работы бэкенда: healthcheck, info, datetime, calc.</p>
+  <p>Проверка работы бэкенда: healthcheck, info, datetime, calc, subtract.</p>
 
   <section>
     <h2>Healthcheck</h2>
@@ -84,6 +84,17 @@
       <button type="button" id="btn-calc">Сложить</button>
     </div>
     <div id="out-calc" class="result empty">—</div>
+  </section>
+
+  <section>
+    <h2>Вычитание (a − b)</h2>
+    <div class="row">
+      <input type="number" id="subtract-a" value="10" step="any" aria-label="a">
+      <span>−</span>
+      <input type="number" id="subtract-b" value="3" step="any" aria-label="b">
+      <button type="button" id="btn-subtract">Вычесть</button>
+    </div>
+    <div id="out-subtract" class="result empty">—</div>
   </section>
 
   <script>
@@ -146,6 +157,19 @@
         })
         .catch(function (e) {
           out('out-calc', 'Ошибка: ' + e.message, true);
+        });
+    };
+
+    document.getElementById('btn-subtract').onclick = function () {
+      var a = document.getElementById('subtract-a').value;
+      var b = document.getElementById('subtract-b').value;
+      out('out-subtract', '…');
+      req('/subtract/' + encodeURIComponent(a) + '/' + encodeURIComponent(b))
+        .then(function (d) {
+          out('out-subtract', JSON.stringify(d, null, 2));
+        })
+        .catch(function (e) {
+          out('out-subtract', 'Ошибка: ' + e.message, true);
         });
     };
   </script>
