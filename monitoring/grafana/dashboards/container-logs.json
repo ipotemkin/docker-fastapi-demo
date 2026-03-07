@@ -43,8 +43,8 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 8,
-          "w": 8,
+          "h": 6,
+          "w": 5,
           "x": 0,
           "y": 0
         },
@@ -76,7 +76,7 @@
               "uid": "P8E80F9AEF21F6940"
             },
             "editorMode": "code",
-            "expr": "sum by (container) (count_over_time({container=~\"$container\", level=~\"$log_level\"} [$__range]))\n",
+            "expr": "sum by (container) (count_over_time({container=~\"$container\"} | logfmt | __error__=\"\" | level=~\"$log_level\" [$__range]))",
             "legendFormat": "{{container}}",
             "queryType": "range",
             "refId": "A"
@@ -134,9 +134,9 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 8,
-          "w": 16,
-          "x": 8,
+          "h": 6,
+          "w": 19,
+          "x": 5,
           "y": 0
         },
         "id": 3,
@@ -169,7 +169,7 @@
               "uid": "P8E80F9AEF21F6940"
             },
             "editorMode": "code",
-            "expr": "sum by (container) (count_over_time({container=~\"$container\", level=~\"$log_level\"} [$__interval]))\n",
+            "expr": "sum by (container) (count_over_time({container=~\"$container\"} | logfmt | __error__=\"\" | level=~\"$log_level\" [$__interval]))",
             "legendFormat": "{{container}}",
             "queryType": "range",
             "refId": "A"
@@ -188,10 +188,10 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 8,
+          "h": 10,
           "w": 24,
           "x": 0,
-          "y": 8
+          "y": 6
         },
         "id": 1,
         "options": {
@@ -212,7 +212,7 @@
               "uid": "P8E80F9AEF21F6940"
             },
             "editorMode": "code",
-            "expr": "{container=~\"$container\", level=~\"$log_level\"}\n",
+            "expr": "{container=~\"$container\"} | logfmt | __error__=\"\" | level=~\"$log_level\"",
             "queryType": "range",
             "refId": "A"
           }
@@ -222,7 +222,7 @@
       }
     ],
     "preload": false,
-    "refresh": "10s",
+    "refresh": "30s",
     "schemaVersion": 40,
     "tags": [],
     "templating": {
@@ -263,8 +263,8 @@
         {
           "allValue": ".+",
           "current": {
-            "text": "info",
-            "value": "info"
+            "text": "All",
+            "value": "$__all"
           },
           "definition": "",
           "includeAll": true,
@@ -284,13 +284,13 @@
       ]
     },
     "time": {
-      "from": "now-6h",
+      "from": "now-1h",
       "to": "now"
     },
     "timepicker": {},
     "timezone": "browser",
     "title": "Container Logs Dashboard",
     "uid": "fffby6pktt2psc",
-    "version": 7,
+    "version": 16,
     "weekStart": ""
   }

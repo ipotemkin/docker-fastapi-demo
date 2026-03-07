@@ -39,7 +39,7 @@ scrape_configs:
             #     expression: '^(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)\s+(?P<level>\w+):\s+(?P<msg>.+)$'
             # Текст уже без timestamp: "INFO:     172.20.0.4:... 200 OK"
             - regex:
-                expression: '^(?Pevel>[A-Z]+):\s+(?P<msg>.+)'
+                expression: '^(?P<level>[A-Z]+):\s+(?P<msg>.+)'
             - template:
                 source: level
                 template: '{{ ToLower .Value }}'
