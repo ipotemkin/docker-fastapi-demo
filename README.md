@@ -105,3 +105,14 @@ API: http://localhost:8000 (Swagger: http://localhost:8000/api/v1).
    в `/etc/docker/daemon.json` добавить  
    `"insecure-registries": ["194.87.130.247:5000"]`,  
    затем `sudo systemctl restart docker`.
+
+### Логирование (Loki + Grafana)
+
+В production compose подняты **Loki**, **Grafana** и **Promtail**. Promtail собирает логи
+контейнеров backend и frontend (через Docker) и отправляет их в Loki. В Grafana
+выберите источник Loki и запрос по лейблу, например: `{container="demo-backend"}` или
+`{container="demo-frontend"}`.
+
+- **Grafana:** http://&lt;сервер&gt;:3000 (логин/пароль по умолчанию: `admin` / `admin`;
+  можно задать через `GRAFANA_ADMIN_USER` и `GRAFANA_ADMIN_PASSWORD` в `.env`).
+- **Loki:** порт 3100 (внутренний; для запросов используется через Grafana).

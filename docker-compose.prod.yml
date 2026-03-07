@@ -1,6 +1,8 @@
 # Production: run pre-built images from registry (no local build).
 # Set REGISTRY and IMAGE_TAG on the server or in .env.
-name: "docker-fastapi-demo"
+# Logging: Promtail collects backend/frontend logs and sends to Loki; Grafana
+# shows them (Loki datasource). Grafana: http://<host>:3000 (default admin/admin).
+version: "3.8"
 services:
   backend:
     image: ${REGISTRY:-194.87.130.247:5000}/docker-fastapi-demo-backend:${IMAGE_TAG:-latest}
@@ -15,3 +17,40 @@ services:
       - "8080:80"
     depends_on:
       - backend
+
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: demo-loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - loki-data:/loki
+
+  grafana:
+    image: grafana/grafana:11.3.0
+    container_name: demo-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+    depends_on:
+      - loki
+
+  promtail:
+    image: grafana/promtail:2.9.4
+    container_name: demo-promtail
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    command: -config.file=/etc/promtail/config.yml
+    depends_on:
+      - loki
+
+volumes:
+  loki-data: {}

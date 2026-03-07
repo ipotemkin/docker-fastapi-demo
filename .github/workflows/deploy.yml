@@ -39,11 +39,22 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
+      - name: Detect changed paths
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+
       - name: Extract short SHA
         id: sha
         run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
       - name: Build and push backend
+        if: steps.changes.outputs.backend == 'true'
         uses: docker/build-push-action@v6
         with:
           context: ./backend
@@ -52,7 +63,24 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ steps.sha.outputs.sha }}
             ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
 
+      - name: Re-tag backend (no code change)
+        if: steps.changes.outputs.backend != 'true'
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest || true
+          if docker image inspect \
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest >/dev/null 2>&1; then
+            docker tag ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest \
+              ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ steps.sha.outputs.sha }}
+            docker push ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ steps.sha.outputs.sha }}
+          else
+            docker build -t ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ steps.sha.outputs.sha }} \
+              -t ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest ./backend
+            docker push ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ steps.sha.outputs.sha }}
+            docker push ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+          fi
+
       - name: Build and push frontend
+        if: steps.changes.outputs.frontend == 'true'
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
@@ -60,6 +88,22 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.sha.outputs.sha }}
             ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+
+      - name: Re-tag frontend (no code change)
+        if: steps.changes.outputs.frontend != 'true'
+        run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest || true
+          if docker image inspect \
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest >/dev/null 2>&1; then
+            docker tag ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest \
+              ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.sha.outputs.sha }}
+            docker push ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.sha.outputs.sha }}
+          else
+            docker build -t ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.sha.outputs.sha }} \
+              -t ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest ./frontend
+            docker push ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.sha.outputs.sha }}
+            docker push ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+          fi
 
       - name: Save image tag for deploy
         run: echo "IMAGE_TAG=${{ steps.sha.outputs.sha }}" >> $GITHUB_ENV
