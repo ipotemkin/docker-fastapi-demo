@@ -1,0 +1,17 @@
+# Production: run pre-built images from registry (no local build).
+# Set REGISTRY and IMAGE_TAG on the server or in .env.
+name: "docker-fastapi-demo"
+services:
+  backend:
+    image: ${REGISTRY:-194.87.130.247:5000}/docker-fastapi-demo-backend:${IMAGE_TAG:-latest}
+    container_name: demo-backend
+    expose:
+      - "8000"
+
+  frontend:
+    image: ${REGISTRY:-194.87.130.247:5000}/docker-fastapi-demo-frontend:${IMAGE_TAG:-latest}
+    container_name: demo-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend

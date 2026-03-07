@@ -1,0 +1,89 @@
+# CI/CD: build, push to registry, deploy to remote server via SSH.
+# Secrets: REGISTRY_USERNAME, REGISTRY_PASSWORD, SSH_HOST, SSH_USER,
+#          SSH_PRIVATE_KEY; optional: DEPLOY_PATH (default: ~/docker-fatsapi-demo)
+
+name: Build and Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  REGISTRY: 194.87.130.247:5000
+  BACKEND_IMAGE: docker-fastapi-demo-backend
+  FRONTEND_IMAGE: docker-fastapi-demo-frontend
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Extract short SHA
+        id: sha
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:${{ steps.sha.outputs.sha }}
+            ${{ env.REGISTRY }}/${{ env.BACKEND_IMAGE }}:latest
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:${{ steps.sha.outputs.sha }}
+            ${{ env.REGISTRY }}/${{ env.FRONTEND_IMAGE }}:latest
+
+      - name: Save image tag for deploy
+        run: echo "IMAGE_TAG=${{ steps.sha.outputs.sha }}" >> $GITHUB_ENV
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    env:
+      REGISTRY: 194.87.130.247:5000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get image tag
+        id: tag
+        run: echo "tag=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            DEPLOY_DIR="${{ secrets.DEPLOY_PATH }}"
+            if [ -z "$DEPLOY_DIR" ]; then DEPLOY_DIR="$HOME/docker-fatsapi-demo"; fi
+            cd "$DEPLOY_DIR"
+            git pull || true
+            export REGISTRY="${{ env.REGISTRY }}"
+            export IMAGE_TAG="${{ steps.tag.outputs.tag }}"
+            echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin ${{ env.REGISTRY }} || true
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d
+            docker image prune -f
