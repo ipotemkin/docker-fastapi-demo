@@ -76,7 +76,7 @@
               "uid": "P8E80F9AEF21F6940"
             },
             "editorMode": "code",
-            "expr": "sum by (container) (count_over_time({container=~\"$container\"} |~ \"(?i)$log_level\" [$__range]))",
+            "expr": "sum by (container) (count_over_time({container=~\"$container\", level=~\"$log_level\"} [$__range]))\n",
             "legendFormat": "{{container}}",
             "queryType": "range",
             "refId": "A"
@@ -169,7 +169,7 @@
               "uid": "P8E80F9AEF21F6940"
             },
             "editorMode": "code",
-            "expr": "sum by (container) (count_over_time({container=~\"$container\"} |~ \"(?i)$log_level\" [$__interval]))",
+            "expr": "sum by (container) (count_over_time({container=~\"$container\", level=~\"$log_level\"} [$__interval]))\n",
             "legendFormat": "{{container}}",
             "queryType": "range",
             "refId": "A"
@@ -188,7 +188,7 @@
           "overrides": []
         },
         "gridPos": {
-          "h": 16,
+          "h": 8,
           "w": 24,
           "x": 0,
           "y": 8
@@ -212,7 +212,7 @@
               "uid": "P8E80F9AEF21F6940"
             },
             "editorMode": "code",
-            "expr": "{container=~\"$container\"} |~ \"(?i)$log_level\"",
+            "expr": "{container=~\"$container\", level=~\"$log_level\"}\n",
             "queryType": "range",
             "refId": "A"
           }
@@ -222,7 +222,7 @@
       }
     ],
     "preload": false,
-    "refresh": "30s",
+    "refresh": "10s",
     "schemaVersion": 40,
     "tags": [],
     "templating": {
@@ -231,9 +231,11 @@
           "allValue": ".+",
           "current": {
             "text": [
+              "demo-backend",
               "demo-frontend"
             ],
             "value": [
+              "demo-backend",
               "demo-frontend"
             ]
           },
@@ -259,43 +261,25 @@
           "type": "query"
         },
         {
-          "allValue": ".*",
+          "allValue": ".+",
           "current": {
-            "text": "$__all",
-            "value": "$__all"
+            "text": "info",
+            "value": "info"
           },
+          "definition": "",
           "includeAll": true,
           "label": "Log Level",
           "name": "log_level",
-          "options": [
-            {
-              "selected": false,
-              "text": "debug",
-              "value": "debug"
-            },
-            {
-              "selected": false,
-              "text": "info",
-              "value": "info"
-            },
-            {
-              "selected": false,
-              "text": "warn",
-              "value": "warn"
-            },
-            {
-              "selected": false,
-              "text": "error",
-              "value": "error"
-            },
-            {
-              "selected": false,
-              "text": "critical",
-              "value": "critical"
-            }
-          ],
-          "query": "debug,info,warn,error,critical",
-          "type": "custom"
+          "options": [],
+          "query": {
+            "label": "level",
+            "refId": "LokiVariableQueryEditor-VariableQuery",
+            "stream": "",
+            "type": 1
+          },
+          "refresh": 1,
+          "regex": "",
+          "type": "query"
         }
       ]
     },
@@ -307,6 +291,6 @@
     "timezone": "browser",
     "title": "Container Logs Dashboard",
     "uid": "fffby6pktt2psc",
-    "version": 6,
+    "version": 7,
     "weekStart": ""
   }
