@@ -1,5 +1,4 @@
 # Promtail: collect Docker container logs and push to Loki.
-# Mount /var/run/docker.sock and /var/lib/docker/containers on the host.
 
 server:
   http_listen_port: 9080
@@ -18,9 +17,8 @@ scrape_configs:
         refresh_interval: 5s
     relabel_configs:
       - source_labels: ['__meta_docker_container_name']
-        regex: '/(.*)'
-        target_label: 'container'
         regex: '/(.+)'
+        target_label: 'container'
         replacement: '$1'
       - source_labels: ['__meta_docker_container_id']
         target_label: 'container_id'
@@ -36,7 +34,6 @@ scrape_configs:
       - output:
           source: output
 
-      # Парсинг demo-backend
       - match:
           selector: '{container="demo-backend"}'
           stages:
@@ -53,36 +50,24 @@ scrape_configs:
             - output:
                 source: msg
 
-      # Парсинг demo-frontend (нужно уточнить формат его логов)
       - match:
           selector: '{container="demo-frontend"}'
           stages:
-            # Дропаем TLS-мусор (строки начинающиеся с бинарных байт)
             - drop:
                 expression: '^\x16\x03'
-            # Дропаем нечитаемые строки (не начинаются с IP-адреса)
             - drop:
-                expression: '^[^\d]'  # опционально, если хочешь только валидные строки
-            # 1. Парсим nginx combined log format
+                expression: '^[^\d]'
             - regex:
                 expression: '^(?P<remote_addr>\S+) \S+ \S+ \[(?P<ts>[^\]]+)\] "(?P<method>\S+) (?P<path>\S+) \S+" (?P<status>\d+) (?P<bytes>\d+) "(?P<referer>[^"]*)" "(?P<user_agent>[^"]*)"'
-
-            # 2. Парсим timestamp
             - timestamp:
                 source: ts
                 format: '02/Jan/2006:15:04:05 -0700'
-
-            # 3. Вычисляем level из статуса и кладём в поле level
             - template:
                 source: level
                 template: >-
                   {{ if (lt (atoi .status) 400) }}info{{ else if (lt (atoi .status) 500) }}warn{{ else }}error{{ end }}
-
-            # 4. Добавляем level как лейбл Loki
             - labels:
                 level:
-
-            # 5. Опционально — метод и статус тоже как лейблы
             - labels:
                 method:
                 status:
