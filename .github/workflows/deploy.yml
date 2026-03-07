@@ -136,11 +136,12 @@ jobs:
               git clone https://github.com/${{ github.repository }}.git "$DEPLOY_DIR"
             fi
             cd "$DEPLOY_DIR"
-            git pull || true
+            git fetch origin
+            git reset --hard origin/main
             export REGISTRY="${{ env.REGISTRY }}"
             export IMAGE_TAG="${{ steps.tag.outputs.tag }}"
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin ${{ env.REGISTRY }} || true
-            docker-compose -f docker-compose.prod.yml pull
-            docker-compose -f docker-compose.prod.yml down
-            docker-compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml down
+            docker compose -f docker-compose.prod.yml up -d
             docker image prune --force
