@@ -1,8 +1,10 @@
 """
-Simple FastAPI app with /api/v1 routes: Swagger, info, healthcheck, calc.
+Simple FastAPI app with /api/v1 routes: Swagger, info, healthcheck, calc,
+datetime.
 """
 import platform
 import sys
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, FastAPI
@@ -31,6 +33,17 @@ def info() -> dict[str, Any]:
 def healthcheck() -> dict[str, str]:
     """Health check endpoint."""
     return {"status": "ok"}
+
+
+@router.get("/datetime")
+def datetime_now() -> dict[str, str]:
+    """Return current date and time (UTC)."""
+    now = datetime.now(timezone.utc)
+    return {
+        "date": now.strftime("%Y-%m-%d"),
+        "time": now.strftime("%H:%M:%S"),
+        "datetime_iso": now.isoformat(),
+    }
 
 
 @router.get("/calc/{a}/{b}")

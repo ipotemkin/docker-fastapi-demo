@@ -73,3 +73,30 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 API: http://localhost:8000 (Swagger: http://localhost:8000/api/v1).
+
+## CI/CD (GitHub Actions)
+
+При пуше в `main` или по ручному запуску workflow:
+
+1. Собираются образы backend и frontend.
+2. Образы пушатся в registry (`194.87.130.247:5000`) с тегом по короткому SHA и `latest`.
+3. По SSH выполняется деплой на удалённый сервер: `docker compose -f docker-compose.prod.yml pull && up -d`.
+
+### Секреты репозитория (Settings → Secrets and variables → Actions)
+
+| Секрет | Описание |
+|--------|----------|
+| `REGISTRY_USERNAME` | Логин для Docker registry |
+| `REGISTRY_PASSWORD` | Пароль для Docker registry |
+| `SSH_HOST` | Хост удалённого сервера (IP или домен) |
+| `SSH_USER` | Пользователь для SSH |
+| `SSH_PRIVATE_KEY` | Приватный SSH-ключ (полное содержимое) |
+| `DEPLOY_PATH` | (опционально) Каталог на сервере с клоном репо; по умолчанию `~/docker-fatsapi-demo` |
+
+### Однократная подготовка сервера
+
+1. Установить Docker и Docker Compose.
+2. Клонировать репозиторий в выбранный каталог, например:  
+   `git clone <url> ~/docker-fatsapi-demo && cd ~/docker-fatsapi-demo`
+3. Убедиться, что в каталог деплоя попал файл `docker-compose.prod.yml` (он в репо).
+4. Настроить доступ по SSH ключу для пользователя из `SSH_USER`.

@@ -55,7 +55,7 @@
 </head>
 <body>
   <h1>Demo <span>API</span></h1>
-  <p>Проверка работы бэкенда: healthcheck, info, calc.</p>
+  <p>Проверка работы бэкенда: healthcheck, info, datetime, calc.</p>
 
   <section>
     <h2>Healthcheck</h2>
@@ -67,6 +67,12 @@
     <h2>Системная информация</h2>
     <button type="button" id="btn-info">Загрузить</button>
     <div id="out-info" class="result empty">—</div>
+  </section>
+
+  <section>
+    <h2>Дата и время</h2>
+    <button type="button" id="btn-datetime">Получить</button>
+    <div id="out-datetime" class="result empty">—</div>
   </section>
 
   <section>
@@ -116,6 +122,17 @@
         })
         .catch(function (e) {
           out('out-info', 'Ошибка: ' + e.message, true);
+        });
+    };
+
+    document.getElementById('btn-datetime').onclick = function () {
+      out('out-datetime', '…');
+      req('/datetime')
+        .then(function (d) {
+          out('out-datetime', JSON.stringify(d, null, 2));
+        })
+        .catch(function (e) {
+          out('out-datetime', 'Ошибка: ' + e.message, true);
         });
     };
 
