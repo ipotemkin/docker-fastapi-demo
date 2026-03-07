@@ -100,3 +100,7 @@ API: http://localhost:8000 (Swagger: http://localhost:8000/api/v1).
    `git clone <url> ~/docker-fatsapi-demo && cd ~/docker-fatsapi-demo`
 3. Убедиться, что в каталог деплоя попал файл `docker-compose.prod.yml` (он в репо).
 4. Настроить доступ по SSH ключу для пользователя из `SSH_USER`.
+5. Registry работает по **HTTP**. На сервере нужно разрешить небезопасный registry:  
+   в `/etc/docker/daemon.json` добавить  
+   `"insecure-registries": ["194.87.130.247:5000"]`,  
+   затем `sudo systemctl restart docker`.
