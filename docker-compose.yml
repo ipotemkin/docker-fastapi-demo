@@ -1,4 +1,5 @@
-name: "docker-fastapi-demo"
+#name: "docker-fastapi-demo"
+version: "3.8"
 services:
   backend:
     build: ./backend
