@@ -87,11 +87,15 @@ jobs:
             set -e
             DEPLOY_DIR="${{ secrets.DEPLOY_PATH }}"
             if [ -z "$DEPLOY_DIR" ]; then DEPLOY_DIR="$HOME/docker-fatsapi-demo"; fi
+            if [ ! -d "$DEPLOY_DIR" ]; then
+              mkdir -p "$(dirname "$DEPLOY_DIR")"
+              git clone https://github.com/${{ github.repository }}.git "$DEPLOY_DIR"
+            fi
             cd "$DEPLOY_DIR"
             git pull || true
             export REGISTRY="${{ env.REGISTRY }}"
             export IMAGE_TAG="${{ steps.tag.outputs.tag }}"
             echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login -u "${{ secrets.REGISTRY_USERNAME }}" --password-stdin ${{ env.REGISTRY }} || true
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d
-            docker image prune -f
+            docker-compose -f docker-compose.prod.yml pull
+            docker-compose -f docker-compose.prod.yml up -d
+            docker image prune --force
