@@ -36,7 +36,7 @@ scrape_configs:
           selector: '{container="demo-backend"}'
           stages:
             - regex:
-                expression: '^(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)\s+(?Pevel>\w+):\s+(?P<msg>.+)$'
+                expression: '^(?P<ts>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)\s+(?P<level>\w+):\s+(?P<msg>.+)$'
             - template:
                 source: level
                 template: '{{ ToLower .Value }}'
