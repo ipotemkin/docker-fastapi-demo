@@ -1,7 +1,7 @@
 # Production: run pre-built images from registry (no local build).
 # Set REGISTRY and IMAGE_TAG on the server or in .env.
-# Logging: Promtail collects backend/frontend logs and sends to Loki; Grafana
-# shows them (Loki datasource). Grafana: http://<host>:3000 (default admin/admin).
+# Logging: Promtail -> Loki; Grafana: Loki + Prometheus. Metrics: backend
+# /metrics + cAdvisor. Grafana: http://<host>:3000 (default admin/admin).
 version: "3.8"
 services:
   backend:
@@ -17,6 +17,38 @@ services:
       - "8080:80"
     depends_on:
       - backend
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    container_name: demo-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    depends_on:
+      - backend
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: demo-cadvisor
+    privileged: true
+    ports:
+      - "8081:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    depends_on:
+      - backend
+      - frontend
 
   loki:
     image: grafana/loki:2.9.4
@@ -58,3 +90,4 @@ services:
 volumes:
   loki-data: {}
   grafana-data: {}
+  prometheus-data: {}

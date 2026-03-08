@@ -49,6 +49,7 @@ make down
 | GET | `/api/v1/healthcheck` | Проверка доступности |
 | GET | `/api/v1/calc/{a}/{b}` | Сложение двух чисел |
 | GET | `/api/v1/subtract/{a}/{b}` | Вычитание (a − b) |
+| GET | `/metrics` | Метрики Prometheus (для мониторинга) |
 
 ## Makefile
 
@@ -106,13 +107,20 @@ API: http://localhost:8000 (Swagger: http://localhost:8000/api/v1).
    `"insecure-registries": ["194.87.130.247:5000"]`,  
    затем `sudo systemctl restart docker`.
 
-### Логирование (Loki + Grafana)
+### Логирование и мониторинг (Loki, Prometheus, Grafana)
 
-В production compose подняты **Loki**, **Grafana** и **Promtail**. Promtail собирает логи
-контейнеров backend и frontend (через Docker) и отправляет их в Loki. В Grafana
-выберите источник Loki и запрос по лейблу, например: `{container="demo-backend"}` или
-`{container="demo-frontend"}`.
+В production compose подняты **Loki**, **Prometheus**, **cAdvisor**, **Grafana** и **Promtail**.
+
+- **Логи:** Promtail собирает логи контейнеров backend и frontend и отправляет их в Loki.
+  В Grafana выберите источник Loki и запрос по лейблу: `{container="demo-backend"}` или
+  `{container="demo-frontend"}`.
+- **Метрики:** бэкенд отдаёт Prometheus-метрики по адресу `/metrics` (счётчики запросов,
+  латентность, статусы). Prometheus их забирает. cAdvisor отдаёт метрики контейнеров
+  (CPU, память, сеть). В Grafana доступен дашборд **«Backend & Frontend metrics»** с
+  основными метриками: RPS и латентность API, статусы ответов, загрузка CPU/память и сеть
+  по контейнерам backend и frontend.
 
 - **Grafana:** http://&lt;сервер&gt;:3000 (логин/пароль по умолчанию: `admin` / `admin`;
-  можно задать через `GRAFANA_ADMIN_USER` и `GRAFANA_ADMIN_PASSWORD` в `.env`).
-- **Loki:** порт 3100 (внутренний; для запросов используется через Grafana).
+  задаётся через `GRAFANA_ADMIN_USER` и `GRAFANA_ADMIN_PASSWORD` в `.env`).
+- **Prometheus:** http://&lt;сервер&gt;:9090 (UI для проверки таргетов и запросов).
+- **Loki:** порт 3100 (доступ через Grafana).

@@ -1,6 +1,6 @@
 """
 Simple FastAPI app with /api/v1 routes: Swagger, info, healthcheck, calc,
-subtract, datetime.
+subtract, datetime. Exposes /metrics for Prometheus.
 """
 import platform
 import sys
@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, FastAPI
+from prometheus_fastapi_instrumentator import Instrumentator
 
 app = FastAPI(
     title="Demo API",
@@ -15,6 +16,8 @@ app = FastAPI(
     docs_url="/api/v1",
     openapi_url="/api/v1/openapi.json",
 )
+
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 router = APIRouter(prefix="/api/v1", tags=["api v1"])
 

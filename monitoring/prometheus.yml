@@ -1,0 +1,15 @@
+# Prometheus: scrape backend /metrics and cAdvisor container metrics.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: backend
+    static_configs:
+      - targets: ['backend:8000']
+    metrics_path: /metrics
+
+  - job_name: cadvisor
+    static_configs:
+      - targets: ['cadvisor:8080']
+    metrics_path: /metrics
